@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+APP="$1"
+IMAGE="dokku/$APP"
+UICACHE="/ui-cache"
+DOCKER_ARGS="-v $DOKKU_ROOT/$APP/ui-cache:/ui-cache"
+
+NODE_VERSION=0.10.28
+NODE_URL="http://s3pository.heroku.com/node/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz"
+env_path=$DOKKU_ROOT/$APP/ENV
+if [[ -f "$env_path" ]]; then
+  source $env_path
+fi
+
+UISCRIPT="
+#!/bin/bash
+
+PATH=$UICACHE/vendor/node/bin:/app/node_modules/.bin:$PATH
+cd /app
+
+#install node
+if [[ ! -f $UICACHE/vendor/node/bin/node ]]; then
+  # Resolve node version using semver.io
+
+  # Download node from Heroku's S3 mirror of nodejs.org/dist
+  curl $NODE_URL -s -o - | tar xzf - -C $UICACHE
+
+  # Move node (and npm) into ./vendor and make them executable
+  mkdir -p $UICACHE/vendor
+  mv $UICACHE/node-v$NODE_VERSION-linux-x64 $UICACHE/vendor/node
+  chmod +x $UICACHE/vendor/node/bin/*
+fi
+
+#install npm deps
+if [[ -f package.json ]]; then
+  if [[ -d $UICACHE/node_modules ]]; then
+    cp -r $UICACHE/node_modules .
+  fi
+  #TODO: bring this back
+  #npm prune
+  npm install
+  if [[ ! -d $UICACHE/node_modules/bower ]]; then
+    npm install bower
+  fi
+  if [[ ! -d $UICACHE/node_modules/grunt-cli ]]; then
+    npm install grunt-cli
+  fi
+  rm -fr $UICACHE/node_modules
+  cp -r node_modules $UICACHE/
+fi
+
+#install bower deps
+if [[ -f bower.json ]]; then
+  if [[ -d $UICACHE/bower_components ]]; then
+    cp -r $UICACHE/bower_components .
+  fi
+  bower prune --allow-root --config.interactive=false
+  bower install --allow-root --config.interactive=false
+  rm -fr $UICACHE/bower_components
+  cp -r bower_components $UICACHE/
+fi
+
+$BUILDUI
+"
+
+if [[ "$BUILDUI" != "" ]]; then
+  echo "-----> Building UI (the first time may take awhile)"
+  id=$(echo "$UISCRIPT" | docker run -i -a stdin $IMAGE /bin/bash -c "cat > /app/.buildui")
+  test $(docker wait $id) -eq 0
+  docker commit $id $IMAGE > /dev/null
+  id=$(docker run -d $IMAGE /bin/bash -c "chmod +x /app/.buildui")
+  test $(docker wait $id) -eq 0
+  docker commit $id $IMAGE > /dev/null
+  id=$(docker run $DOCKER_ARGS -d $IMAGE /bin/bash -c "/app/.buildui")
+  test $(docker wait $id) -eq 0
+  docker commit $id $IMAGE > /dev/null
+  echo "-----> Building UI Complete"
+fi
