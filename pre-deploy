@@ -16,7 +16,7 @@ fi
 UISCRIPT="
 #!/bin/bash
 
-PATH=$UICACHE/vendor/node/bin:/app/node_modules/.bin:$PATH
+PATH=$UICACHE/vendor/node/bin:/app/node_modules/.bin:\$PATH
 cd /app
 
 #install node
