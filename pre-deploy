@@ -70,7 +70,7 @@ if [[ -f bower.json ]]; then
 fi
 
 if [[ -f Gruntfile.js ]]; then
-  if [[ -z "$BUILDUI" ]]; then
+  if [[ -z \"$BUILDUI\" ]]; then
     grunt
   else
     $BUILDUI
