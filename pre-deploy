@@ -19,6 +19,10 @@ UISCRIPT="
 PATH=$UICACHE/vendor/node/bin:/app/node_modules/.bin:\$PATH
 cd /app
 
+if [[ ! -f package.json || ! -f bower.json ]]; then
+  exit 0
+fi
+
 #install node
 if [[ ! -f $UICACHE/vendor/node/bin/node ]]; then
   # Resolve node version using semver.io
