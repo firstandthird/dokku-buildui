@@ -73,6 +73,7 @@ if [[ -f Gruntfile.js ]]; then
   if [[ -z \"$BUILDUI\" ]]; then
     grunt
   else
+    echo \"Running Custom command: $BUILDUI\"
     $BUILDUI
   fi
 fi
