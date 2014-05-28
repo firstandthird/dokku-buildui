@@ -51,9 +51,10 @@ fi
 
 #install npm deps
 if [[ -f package.json ]]; then
-  if [[ -f $UICACHE/node_modules.tar ]]; then
+  if [[ -f $UICACHE/node_modules.tar.gz ]]; then
     log "start copying from node_modules cache"
-    mv $UICACHE/node_modules.tar .
+    mv $UICACHE/node_modules.tar.gz .
+    gunzip node_modules.tar.gz
     tar xf node_modules.tar
     rm node_modules.tar
     log "end copying from node_modules cache"
@@ -74,16 +75,17 @@ if [[ -f package.json ]]; then
     log "end grunt-cli install"
   fi
   log "start copy node_modules to cache"
-  tar -cf node_modules.tar node_modules
-  mv node_modules.tar $UICACHE/
+  tar -czf node_modules.tar.gz node_modules
+  mv node_modules.tar.gz $UICACHE/
   log "end copy node_modules to cache"
 fi
 
 #install bower deps
 if [[ -f bower.json ]]; then
-  if [[ -f $UICACHE/bower_components.tar ]]; then
+  if [[ -f $UICACHE/bower_components.tar.gz ]]; then
     log "start copy bower_components from cache"
-    mv $UICACHE/bower_components.tar .
+    mv $UICACHE/bower_components.tar.gz .
+    gunzip bower_components.tar.gz
     tar xf bower_components.tar
     rm bower_components.tar
     log "end copy bower_components from cache"
@@ -94,8 +96,8 @@ if [[ -f bower.json ]]; then
   log "end bower install"
 
   log "start copy bower_components to cache"
-  tar -cf bower_components.tar bower_components
-  mv bower_components.tar $UICACHE/
+  tar -czf bower_components.tar.gz bower_components
+  mv bower_components.tar.gz $UICACHE/
   log "end copy bower_components to cache"
 fi
 
