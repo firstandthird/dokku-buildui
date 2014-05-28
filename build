@@ -62,7 +62,7 @@ if [[ -f package.json ]]; then
   #TODO: bring this back
   #npm prune
   log "start npm install"
-  npm install
+  npm install --cache-min 9999999
   log "end npm install"
   if [[ ! -d node_modules/bower ]]; then
     log "start bower install"
