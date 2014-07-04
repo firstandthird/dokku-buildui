@@ -28,7 +28,7 @@ log() {
 
 cd /app
 
-if [[ ! -f package.json || ! -f bower.json ]]; then
+if [[ -n "$BUILDSKIP" || ! -f package.json || ! -f bower.json ]]; then
   exit 0
 fi
 
